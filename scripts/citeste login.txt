@@ -1,0 +1,86 @@
+Ah, înțeleg acum! Vrei să **deblochezi Windows de la distanță** (de pe telefon), nu doar autologon.
+
+## ⚠️ Problema:
+
+Windows **NU permite** introducerea parolei prin scripturi pe ecranul de login din **motive de securitate**. Nici PowerShell, nici batch, nici AutoHotkey nu pot scrie parola pe ecranul de logare.
+
+## ✅ Soluții posibile:
+
+### **Soluția 1: Autologon (RECOMANDATĂ)**
+
+În loc să introduci parola de la distanță, configurezi **o singură dată** pe laptop ca Windows să intre automat:
+
+1. **Pe laptop**, rulezi scriptul PowerShell (o singură dată):
+   ```powershell
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File "D:\Teste cursor\remote-bat-runner\scripts\setup_autologon.ps1"
+   ```
+
+2. În fereastra care apare, introduci parola Windows **o singură dată**
+
+3. **Gata!** De acum înainte:
+   - La pornire/restart, Windows intră automat fără parolă
+   - Nu mai trebuie să faci nimic de pe telefon
+   - Serverul tău pornește automat
+   - Toate butoanele funcționează
+
+---
+
+### **Soluția 2: Remote Desktop (alternativă)**
+
+Dacă vrei **control vizual complet** de pe telefon:
+
+1. **Activează Remote Desktop pe laptop:**
+   - Settings → System → Remote Desktop → On
+   - Notează IP-ul laptopului
+
+2. **De pe telefon:**
+   - Instalează **Microsoft Remote Desktop** (Android/iOS)
+   - Conectezi la laptop și introduci parola manual pe ecran
+   - Vezi tot desktopul, poți face orice
+
+Dar pentru asta laptopul **trebuie să fie deja logat** sau cu autologon activat.
+
+---
+
+### **Soluția 3: Chrome Remote Desktop**
+
+Alternativă la Remote Desktop, mai simplă:
+
+1. Pe laptop: https://remotedesktop.google.com/access
+2. Instalează Chrome Remote Desktop
+3. De pe telefon: accesezi același link și controlezi laptopul
+
+Dar din nou, laptopul trebuie să fie **deja logat**.
+
+---
+
+## 🎯 **Recomandarea mea:**
+
+**Folosește Autologon** (Soluția 1):
+
+✅ Cel mai simplu  
+✅ Cel mai sigur  
+✅ Funcționează 100% cu sistemul tău actual  
+✅ Nu mai trebuie să faci nimic de pe telefon pentru login  
+
+**Flow-ul complet:**
+1. Laptop pornește (manual sau Wake-on-LAN)
+2. Windows intră automat (autologon)
+3. Serverul tău pornește automat (deja configurat)
+4. De pe telefon apeși butoanele: ChatGPT, PDF-uri, Arcanum
+
+---
+
+## 🔐 Siguranță:
+
+"Dar parola e stocată pe laptop?" → **Da**, criptată în Registry de Windows. Dacă cineva are acces fizic la laptop și știe să extragă parolele din Registry, poate să o ia. Dar:
+
+- Dacă ai acces fizic la un laptop, oricum poți să-l pornești și să intri
+- E mai sigur decât să trimiți parola prin internet
+- E o funcție **oficială Microsoft** (Sysinternals)
+
+---
+
+**Vrei să configurezi Autologon-ul acum pe laptop?** Este singura cale să "intri automat" fără să introduci parola de fiecare dată. 
+
+De la distanță **nu poți introduce parola** pe ecranul de login Windows - e blocat de sistem din motive de securitate! 🔒
