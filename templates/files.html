@@ -30,6 +30,12 @@
   .row span:before { content: "• "; opacity: .5; }
   .row span:first-child:before { content: ""; }
   .empty { opacity: .5; font-style: italic; padding: 8px 4px; }
+  .daily-count {
+    margin: 14px 0 18px; padding: 12px 14px; border-radius: 12px;
+    background: rgba(250,204,21,.12); border: 1px solid rgba(250,204,21,.35);
+    color: #fde047; font-size: 15px; font-weight: 700;
+  }
+  .daily-count strong { font-size: 22px; margin-left: 6px; color: #facc15; }
   button {
     display: block; width: 100%; margin-top: 22px;
     background: linear-gradient(145deg, #3b82f6, #1d4ed8);
@@ -42,6 +48,7 @@
 <body>
   <h1>Recent files</h1>
   <div class="meta">{{ root }} · scanned at {{ scanned_at }}</div>
+  <div class="daily-count">PDFs downloaded today {{ daily_window }}:<strong>{{ daily_pdf_count }}</strong></div>
 
   <h2>Files ({{ exts }}) · top level</h2>
   {% if pdfs %}

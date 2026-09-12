@@ -21,3 +21,7 @@ env/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Imported delivery archives
+remote-bat-runner-update.zip
+remote-bat-runner-changes.patch

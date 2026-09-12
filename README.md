@@ -129,3 +129,113 @@ powercfg /setactive SCHEME_CURRENT
 ## License
 
 MIT
+
+## Added: morning PDF count (05:00-08:00)
+
+The `/files` page now shows a highlighted total for PDFs downloaded today in the
+configured morning window. The default window is **05:00 <= time < 08:00**.
+
+The counter always checks PDFs still present at the top level of `SCAN_ROOT`.
+It also recursively checks top-level workflow folders whose names contain
+`temp`, `tempor`, or `merge`, so files that were moved after download continue
+to be counted. Duplicate copies are de-duplicated by filename and SHA-256 content digest.
+Modification time is the download-completion proxy: the actual downloader uses
+`shutil.copy2` for backups and moves source files without changing that timestamp.
+Creation time changes on copying and is not used.
+
+For maximum accuracy, configure the exact workflow folders in your local
+`config.py` (this file remains untracked):
+
+```python
+DAILY_PDF_COUNT_START_HOUR = 5
+DAILY_PDF_COUNT_END_HOUR = 8
+DAILY_PDF_COUNT_ROOTS = (
+    r"G:\\Temp",
+    r"G:\\Temporare",
+    r"G:\\PDF_Merge",
+)
+```
+
+Only put folders that contain the **source downloaded PDFs** in that tuple. If a
+folder contains newly generated merged PDFs too, excluding that folder prevents
+those generated outputs from inflating the download count.
+
+## Added: open ChatGPT from the phone
+
+A new protected page is available at:
+
+```text
+/chatgpt?k=<same-secret>
+```
+
+Tap **OPEN CHATGPT** to start or activate the ChatGPT Windows app in the current
+logged-in Windows desktop session. The implementation is in
+`scripts/open_chatgpt.ps1`; it dynamically resolves the installed ChatGPT app
+instead of hard-coding a package ID.
+
+The public ChatGPT URL is also written as the third line in `current_url.txt`.
+
+## Surviving Windows Update restarts
+
+There are two separate pieces:
+
+1. **Automatic Windows logon** — run `scripts/setup_autologon.ps1` once while
+   physically at the laptop. It downloads Microsoft's official Sysinternals
+   Autologon tool and opens its local GUI. Enter the Windows password there and
+   click **Enable**. The password is not put in this repository, `config.py`,
+   GitHub, or the mobile web page.
+2. **Start Arcanum after logon** — run `scripts/setup_runner_at_logon.ps1` once.
+   It registers a Scheduled Task named `RemoteBatRunner-AtLogon`, which starts
+   Python directly (no `pause`) 30 seconds after that Windows user logs in.
+   It restarts on failure and prevents duplicate task instances. This starts the
+   control server and ngrok; the existing download schedule remains responsible
+   for starting the downloader.
+
+After those are configured, the recovery chain is:
+
+```text
+Windows Update restart
+  -> Windows Autologon
+  -> RemoteBatRunner-AtLogon task
+  -> python app.py
+  -> Flask + ngrok
+  -> phone pages become reachable again
+  -> /chatgpt button can start ChatGPT
+```
+
+### Why there is no remote "type my Windows password" web page
+
+The Windows sign-in screen runs on the Windows secure desktop. A normal Flask,
+Python, PowerShell, or browser process cannot reliably inject Enter/password/
+Enter into that secure screen. More importantly, sending the Windows password
+through an ngrok/GitHub page would create an unnecessary credential exposure.
+The one-time local Autologon configuration is the reliable approach for an
+unattended laptop.
+
+## Verified Windows workflow and privacy
+
+Local inspection found the source backups in `G:/Temporare`, created with
+`shutil.copy2`, and source segments named `__pagesN-M.pdf`. Use
+`DAILY_PDF_NAME_PATTERN = r"__pages\d+-\d+\.pdf$"` to exclude merged outputs.
+The actual backup directory was empty after cleanup on 2026-09-12. Optional
+`DAILY_PDF_LOG_GLOBS` recovers unique names from positive-size `Confirmat pe disk`
+records in existing batch logs, using the batch's local `Data:` timestamps
+(month/day/year). Only completed sessions wholly within the window are accepted;
+a session spanning 05:00 or 08:00 cannot supply exact per-download times.
+Disk copies already represented by those log names are not counted again.
+Deleted files without a usable log cannot be reconstructed. For 2026-09-12 the
+available completed session gives 25 unique confirmed source downloads.
+
+The private `?k=` entry link now establishes an HttpOnly, Secure, SameSite cookie
+and redirects to a clean URL. Use HTTPS through ngrok. Templates contain no
+server key, POSTs require a custom request header, responses are no-store and
+no-referrer, and local access logging/ngrok request inspection are disabled.
+Private links remain only in the ignored local `current_url.txt`; never publish
+that file. Anyone possessing the entry link can operate the runner.
+
+`setup_autologon.ps1` checks the Microsoft digital signature before opening the
+local credential dialog. Administrators can recover an Autologon LSA secret;
+configure automatic sign-in only on the intended private laptop.
+
+Validation: `python -m unittest discover -s tests -v`. Test launches are mocked;
+Windows foreground activation and a full reboot require local verification.

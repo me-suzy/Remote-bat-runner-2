@@ -43,12 +43,14 @@
   <button id="go">RUN</button>
   <div id="status"></div>
   {% if files_enabled %}
-    <a class="secondary" href="/files?k={{ secret|urlencode }}">Recent files →</a>
+    <a class="secondary" href="/files">Recent files →</a>
+  {% endif %}
+  {% if chatgpt_enabled %}
+    <a class="secondary" href="/chatgpt">Open ChatGPT →</a>
   {% endif %}
   <small>Tap to trigger the .bat on your laptop</small>
 
 <script>
-  const SECRET = {{ secret|tojson }};
   const btn = document.getElementById("go");
   const status = document.getElementById("status");
 
@@ -57,7 +59,7 @@
     status.className = "";
     status.textContent = "Sending...";
     try {
-      const r = await fetch("/run?k=" + encodeURIComponent(SECRET), { method: "POST" });
+      const r = await fetch("/run", { method: "POST", headers: {"X-Requested-With": "RemoteRunner"} });
       const j = await r.json();
       if (j.ok) {
         status.className = "ok";
