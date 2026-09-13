@@ -47,6 +47,9 @@ def load_ngrok_token() -> str:
 
 SECRET = load_or_create_secret()
 app = Flask(__name__, static_folder="static", template_folder="templates")
+from remote_web import remote
+app.register_blueprint(remote)
+app.config['MAX_CONTENT_LENGTH'] = 32768
 
 app.secret_key = SECRET
 app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Strict", SESSION_COOKIE_SECURE=True)
@@ -73,6 +76,7 @@ def authenticate():
 def privacy_headers(response):
     response.headers["Cache-Control"] = "no-store"
     response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers['X-Frame-Options'] = 'DENY'
     return response
 
 
@@ -394,7 +398,8 @@ def start_tunnel() -> str:
     home = f"{url}/?k={SECRET}"
     files = f"{url}/files?k={SECRET}"
     chatgpt = f"{url}/chatgpt?k={SECRET}"
-    URL_FILE.write_text(home + "\n" + files + "\n" + chatgpt + "\n", encoding="utf-8")
+    remote_url = f"{url}/remote?k={SECRET}"
+    URL_FILE.write_text(home + "\n" + files + "\n" + chatgpt + "\n" + remote_url + "\n", encoding="utf-8")
     print("Private mobile links saved in current_url.txt", flush=True)
     return home
 

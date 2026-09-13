@@ -38,8 +38,10 @@ class RunnerTests(unittest.TestCase):
 
     def test_auth_and_no_secret_in_html(self):
         c = self.mod.app.test_client()
-        for route in ("/", "/files", "/chatgpt"):
+        for route in ("/", "/files", "/chatgpt", "/remote", "/remote/windows"):
             self.assertEqual(c.get(route).status_code, 403)
+        for route in ('/remote/frame','/remote/activate','/remote/action'):
+            self.assertEqual(c.post(route,json={}).status_code,403)
         self.assertEqual(c.post("/open-chatgpt").status_code, 403)
         r = c.get("/chatgpt?k=test-private-key", base_url="https://localhost")
         self.assertEqual(r.status_code, 302)

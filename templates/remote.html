@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ro">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>ChatGPT de pe telefon</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0f172a;color:#e2e8f0;font:16px system-ui;line-height:1.5}main{max-width:1100px;margin:auto;padding:20px}h1{font-size:26px;margin:10px 0}h2{font-size:20px}a{color:#a5b4fc}button,select,textarea{font:inherit;border-radius:10px;border:1px solid #475569;padding:11px;background:#1e293b;color:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:wait}.primary{background:#4f46e5;border-color:#6366f1}.row{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}select{max-width:100%;flex:1}section{padding:18px;background:#162033;border:1px solid #334155;border-radius:16px;margin:18px 0}#view{overflow:auto;background:#080e1a;border-radius:10px;min-height:180px}#screen{display:block;width:100%;height:auto;cursor:crosshair}#view.zoom #screen{width:1600px;max-width:none}textarea{width:100%;min-height:95px}#status{min-height:26px;color:#fcd34d}small,.muted{color:#94a3b8}.pill{display:inline-block;background:#253650;padding:4px 10px;border-radius:20px}summary{cursor:pointer}label{display:inline-flex;gap:8px;align-items:center}input[type=checkbox]{width:20px;height:20px}
+</style>
+<main>
+<a href="/chatgpt">← Open ChatGPT</a>
+<h1>Conversează cu ChatGPT de pe laptop</h1>
+<p>Vezi fereastra reală și introduci mesajul în aplicația de pe laptop.</p>
+<section>
+<span class="pill">Varianta web</span>
+<div class="row"><button id="open">Deschide ChatGPT</button><button id="list">Caută ferestre</button></div>
+<select id="windows" aria-label="Fereastra ChatGPT"><option value="">Alege fereastra…</option></select>
+<div class="row"><button id="activate" class="primary">Activează fereastra</button><button id="refresh">Actualizează imaginea</button><label><input id="live" type="checkbox" checked>Imagine la 3 secunde</label><button id="zoom">Mărește imaginea</button></div>
+<p id="status" role="status">Se caută ferestrele…</p>
+<div id="view"><img id="screen" alt="Imaginea ferestrei apare aici după selectare" hidden></div>
+<p><strong>1.</strong> Activează fereastra. <strong>2.</strong> Apasă în imagine pe câmpul de mesaj al aplicației. <strong>3.</strong> Scrie mai jos și apasă „Introdu textul”.</p>
+<textarea id="message" maxlength="4000" placeholder="Mesajul pentru ChatGPT…" aria-label="Mesaj pentru aplicația de pe laptop"></textarea>
+<div class="row"><button id="type" class="primary">Introdu textul</button><button id="enter">Trimite / Enter</button><button id="backspace">Șterge un caracter</button><button id="escape">Escape</button></div>
+<div class="row"><button id="up">↑ Derulează</button><button id="down">↓ Derulează</button></div>
+<small>„Introdu textul” nu trimite mesajul. Verifică-l în imagine, apoi apasă „Trimite / Enter”. Rândurile noi sunt introduse ca spații. Imaginea poate avea întârziere; starea de lucru se vede în aplicație. Nu există detecție automată „idle”. Desktopul trebuie să fie deblocat.</small>
+</section>
+<section>
+<span class="pill">Varianta TeamViewer</span>
+<h2>Controlează întregul laptop</h2>
+<p>TeamViewer este deja instalat pe laptop. Pe telefon folosește <strong>TeamViewer Remote Control</strong>, introdu ID-ul laptopului și parola afișată de TeamViewer sau selectează laptopul din contul tău.</p>
+<div class="row"><a href="https://play.google.com/store/apps/details?id=com.teamviewer.teamviewer.market.mobile" target="_blank" rel="noopener noreferrer">Aplicația Android</a><a href="https://www.teamviewer.com/en/download/ios/" target="_blank" rel="noopener noreferrer">Aplicația iPhone</a></div>
+<small>Parola TeamViewer se introduce doar în aplicația TeamViewer. După conectare, poți scrie direct în ChatGPT și vedea răspunsurile.</small>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);let token=null,busy=false;
+async function api(path,data){const r=await fetch(path,data===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-Requested-With':'RemoteRunner'},body:JSON.stringify(data)});const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||'Cererea a eșuat');return j}
+function selected(){const id=Number($('windows').value);if(!id)throw Error('Alege fereastra ChatGPT.');return id}
+async function frame(){token=null;const j=await api('/remote/frame',{window:selected()});await new Promise((resolve,reject)=>{$('screen').onload=resolve;$('screen').onerror=()=>reject(Error('Imagine indisponibilă'));$('screen').src=j.image;$('screen').hidden=false});token=j.token;$('status').textContent='Imagine actualizată la '+new Date().toLocaleTimeString()+' — '+j.title}
+async function task(fn){if(busy)return;busy=true;document.querySelectorAll('button').forEach(b=>b.disabled=true);try{await fn()}catch(e){token=null;$('live').checked=false;$('status').textContent=e.message}finally{busy=false;document.querySelectorAll('button').forEach(b=>b.disabled=false)}}
+async function windows(){const j=await api('/remote/windows');const previous=$('windows').value;$('windows').replaceChildren();for(const w of j.windows){const o=document.createElement('option');o.value=w.id;o.textContent=w.title;$('windows').append(o)}if([...$('windows').options].some(o=>o.value===previous))$('windows').value=previous;if(!j.windows.length){$('status').textContent='Nicio fereastră ChatGPT. Apasă Deschide ChatGPT.';return}await frame()}
+async function action(data,onApplied=()=>{}){if(!token)throw Error('Actualizează imaginea înainte de comandă.');const current=token;token=null;await api('/remote/action',{token:current,...data});onApplied();await new Promise(r=>setTimeout(r,350));try{await frame()}catch(e){throw Error('Comanda a fost executată, dar imaginea nu s-a actualizat. Verifică înainte să repeți. '+e.message)}}
+$('list').onclick=()=>task(windows);$('open').onclick=()=>task(async()=>{await api('/open-chatgpt',{});await windows()});$('activate').onclick=()=>task(async()=>{await api('/remote/activate',{window:selected()});await frame()});$('refresh').onclick=()=>task(frame);$('windows').onchange=()=>task(frame);
+$('screen').onclick=e=>{const rect=e.currentTarget.getBoundingClientRect();task(()=>action({action:'click',x:(e.clientX-rect.left)/rect.width,y:(e.clientY-rect.top)/rect.height}))};
+$('type').onclick=()=>task(async()=>{const text=$('message').value;if(!text.trim())throw Error('Scrie mai întâi mesajul.');await action({action:'text',text},()=>{$('message').value=''}) });
+for(const key of ['enter','backspace','escape'])$(key).onclick=()=>task(()=>action({action:'key',key}));for(const direction of ['up','down'])$(direction).onclick=()=>task(()=>action({action:'scroll',direction}));
+$('zoom').onclick=()=>{$('view').classList.toggle('zoom');$('zoom').textContent=$('view').classList.contains('zoom')?'Încadrează imaginea':'Mărește imaginea'};
+setInterval(()=>{if($('live').checked&&!document.hidden&&!busy)task(frame)},3000);task(windows);
+</script>
+</html>

@@ -239,3 +239,33 @@ configure automatic sign-in only on the intended private laptop.
 
 Validation: `python -m unittest discover -s tests -v`. Test launches are mocked;
 Windows foreground activation and a full reboot require local verification.
+
+## See and control the local ChatGPT window from a phone
+
+Open `/remote?k=<same-private-key>` or use **Controlează ChatGPT** on the home
+page. Select the ChatGPT window, activate it, and click the message field in
+the image. **Introdu textul** types Unicode text into the focused field;
+**Trimite / Enter** submits separately. Newlines are flattened to spaces so
+typing alone never submits a message. Enable the three-second refresh to see
+responses, or enlarge the image and pan on a small screen.
+
+This is a user-operated experimental window remote control, not a separate AI
+conversation or an automatic idle detector. It only accepts visible windows
+owned by `ChatGPT.exe`, which is the installed app on this laptop. Windows must
+be logged in and unlocked. Input is rejected if the target window moved, lost
+foreground, is covered at the click point, or if the snapshot expired. Snapshots
+are in memory, expire after 20 seconds and are scoped to the browser session;
+each action consumes its snapshot token. There is no arbitrary shell or hotkey
+endpoint. Anyone with the private runner link can operate this window.
+
+TeamViewer remains the second option for full desktop control. Install
+**TeamViewer Remote Control** on the phone and use the laptop's ID and current
+password shown in TeamViewer, or the already configured account. No TeamViewer
+password is stored in this project or its web page. Account sign-in and the
+first phone connection must be completed by the user. The remote page includes
+links to the Android and iPhone apps.
+
+Validation covers authentication, session-isolated/expiring/single-use snapshot
+tokens, Unicode insertion without Enter, invalid input rejection, and a real
+Windows screenshot. Typing/submitting in the user's live conversation is left
+for the user's phone test to avoid sending an unintended message.
